@@ -4,13 +4,10 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base32"
-	"encoding/hex"
 	"errors"
 	"fmt"
-	"math"
 	"math/rand"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -83,52 +80,31 @@ func (this *GoogleAuthenticator) CreateSecret(lens ...int) (string, error) {
 }
 
 // VerifyCode Check if the code is correct. This will accept codes starting from $discrepancy*30sec ago to $discrepancy*30sec from now
-func (this *GoogleAuthenticator) VerifyCode(secret, code string, discrepancy int64) (bool, error) {
+func (this *GoogleAuthenticator) VerifyCode(secret, code string) (bool, error) {
 	// now time
-	curTimeSlice := time.Now().Unix() / 30
-	for i := -discrepancy; i <= discrepancy; i++ {
-		calculatedCode, err := this.GetCode(secret, curTimeSlice+i)
-		if err != nil {
-			return false, err
-		}
-		if calculatedCode == code {
-			return true, nil
-		}
+	calculatedCode, err := this.GetCode(secret)
+	if err != nil {
+		return false, err
+	}
+	if calculatedCode == code {
+		return true, nil
 	}
 	return false, nil
 }
 
 // GetCode Calculate the code, with given secret and point in time
-func (this *GoogleAuthenticator) GetCode(secret string, timeSlices ...int64) (string, error) {
-	var timeSlice int64
-	switch len(timeSlices) {
-	case 0:
-		timeSlice = time.Now().Unix() / 30
-	case 1:
-		timeSlice = timeSlices[0]
-	default:
-		return "", ErrParam
-	}
-	secret = strings.ToUpper(secret)
-	secretKey, err := base32.StdEncoding.DecodeString(secret)
+func (this *GoogleAuthenticator) GetCode(secret string) (string, error) {
+	// decode the key from the first argument
+	inputNoSpaces := strings.Replace(secret, " ", "", -1)
+	inputNoSpacesUpper := strings.ToUpper(inputNoSpaces)
+	secretKey, err := base32.StdEncoding.DecodeString(inputNoSpacesUpper)
 	if err != nil {
 		return "", err
 	}
-	tim, err := hex.DecodeString(fmt.Sprintf("%016x", timeSlice))
-	if err != nil {
-		return "", err
-	}
-	hm := HmacSha1(secretKey, tim)
-	offset := hm[len(hm)-1] & 0x0F
-	hashpart := hm[offset : offset+4]
-	value, err := strconv.ParseInt(hex.EncodeToString(hashpart), 16, 0)
-	if err != nil {
-		return "", err
-	}
-	value = value & 0x7FFFFFFF
-	modulo := int64(math.Pow(10, this.codeLen))
-	format := fmt.Sprintf("%%0%dd", int(this.codeLen))
-	return fmt.Sprintf(format, value%modulo), nil
+
+	epochSeconds := time.Now().Unix()
+	value := oneTimePassword(secretKey, toBytes(epochSeconds/30))
+	return fmt.Sprintf("%d", value), nil
 }
 
 /**
@@ -145,10 +121,47 @@ func (this *GoogleAuthenticator) GetQRCodeUrl(name, secret, issuer string) strin
 	return fmt.Sprintf(`http://s.jiathis.com/qrcode.php?url=%s`, url.QueryEscape(strUrl))
 }
 
-func HmacSha1(key, data []byte) []byte {
-	mac := hmac.New(sha1.New, key)
-	mac.Write(data)
-	return mac.Sum(nil)
+func toBytes(value int64) []byte {
+	var result []byte
+	mask := int64(0xFF)
+	shifts := [8]uint16{56, 48, 40, 32, 24, 16, 8, 0}
+	for _, shift := range shifts {
+		result = append(result, byte((value>>shift)&mask))
+	}
+	return result
+}
+
+func toUint32(bytes []byte) uint32 {
+	return (uint32(bytes[0]) << 24) + (uint32(bytes[1]) << 16) +
+		(uint32(bytes[2]) << 8) + uint32(bytes[3])
+}
+
+func oneTimePassword(key []byte, value []byte) uint32 {
+	// sign the value using HMAC-SHA1
+	hmacSha1 := hmac.New(sha1.New, key)
+	hmacSha1.Write(value)
+	hash := hmacSha1.Sum(nil)
+
+	// We're going to use a subset of the generated hash.
+	// Using the last nibble (half-byte) to choose the index to start from.
+	// This number is always appropriate as it's maximum decimal 15, the hash will
+	// have the maximum index 19 (20 bytes of SHA1) and we need 4 bytes.
+	offset := hash[len(hash)-1] & 0x0F
+
+	// get a 32-bit (4-byte) chunk from the hash starting at offset
+	hashParts := hash[offset : offset+4]
+
+	// ignore the most significant bit as per RFC 4226
+	hashParts[0] = hashParts[0] & 0x7F
+
+	number := toUint32(hashParts)
+
+	// size to 6 digits
+	// one million is the first number with 7 digits so the remainder
+	// of the division will always return < 7 digits
+	pwd := number % 1000000
+
+	return pwd
 }
 
 func arrayFlip(oldArr []string) map[string]int {
