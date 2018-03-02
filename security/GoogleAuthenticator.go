@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -136,24 +135,13 @@ func (this *GoogleAuthenticator) GetCode(secret string, timeSlices ...int64) (st
 *
 * @param string $name
 * @param string $secret
-* @param array  $params
+* @param string $issuer
 *
 * @return string
  */
-func (this *GoogleAuthenticator) GetQRCodeUrl(name, secret string, params ...int) string {
-	var width, height int
-	width, height = 150, 150
-	switch len(params) {
-	case 0:
-	case 1:
-		width = params[0]
-	case 2:
-		width = params[0]
-		height = params[1]
-	}
-
-	strUrl := fmt.Sprintf("otpauth://totp/%s?secret=%s", name, secret)
-	return fmt.Sprintf(`https://chart.googleapis.com/chart?chs=%dx%d&chld=H|0&cht=qr&chl=%s`, width, height, url.QueryEscape(strUrl))
+func (this *GoogleAuthenticator) GetQRCodeUrl(name, secret, issuer string) string {
+	strUrl := fmt.Sprintf("otpauth://totp/%s--%s?secret=%s&issuer=%s", name, time.Now().Format("2006-01-02,15:04"), secret, issuer)
+	return fmt.Sprintf(`http://s.jiathis.com/qrcode.php?url=%s`, strUrl)
 }
 
 func HmacSha1(key, data []byte) []byte {
