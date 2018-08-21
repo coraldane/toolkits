@@ -24,15 +24,6 @@ var (
 		"I", "J", "K", "L", "M", "N", "O", "P", // 15
 		"Q", "R", "S", "T", "U", "V", "W", "X", // 23
 		"Y", "Z", "2", "3", "4", "5", "6", "7", // 31
-		"=", // padding char
-	}
-
-	allowedValues = map[int]string{
-		6: "======",
-		4: "====",
-		3: "===",
-		1: "=",
-		0: "",
 	}
 )
 
@@ -81,19 +72,31 @@ func (this *GoogleAuthenticator) CreateSecret(lens ...int) (string, error) {
 
 // VerifyCode Check if the code is correct. This will accept codes starting from $discrepancy*30sec ago to $discrepancy*30sec from now
 func (this *GoogleAuthenticator) VerifyCode(secret, code string) (bool, error) {
-	// now time
-	calculatedCode, err := this.GetCode(secret)
-	if err != nil {
-		return false, err
-	}
-	if calculatedCode == code {
-		return true, nil
+	var discrepancy int64
+	discrepancy = 1
+	for i := -discrepancy; i <= discrepancy; i++ {
+		calculatedCode, err := this.GetCode(secret, i)
+		if err != nil {
+			return false, err
+		}
+		if calculatedCode == code {
+			return true, nil
+		}
 	}
 	return false, nil
 }
 
 // GetCode Calculate the code, with given secret and point in time
-func (this *GoogleAuthenticator) GetCode(secret string) (string, error) {
+func (this *GoogleAuthenticator) GetCode(secret string, timeSlices ...int64) (string, error) {
+	var timeSlice int64
+	switch len(timeSlices) {
+	case 0:
+		timeSlice = time.Now().Unix() / 30
+	case 1:
+		timeSlice = timeSlices[0]
+	default:
+		return "", ErrParam
+	}
 	// decode the key from the first argument
 	inputNoSpaces := strings.Replace(secret, " ", "", -1)
 	inputNoSpacesUpper := strings.ToUpper(inputNoSpaces)
@@ -103,7 +106,7 @@ func (this *GoogleAuthenticator) GetCode(secret string) (string, error) {
 	}
 
 	epochSeconds := time.Now().Unix()
-	value := oneTimePassword(secretKey, toBytes(epochSeconds/30))
+	value := oneTimePassword(secretKey, toBytes(epochSeconds/30+timeSlice))
 	return fmt.Sprintf("%d", value), nil
 }
 
