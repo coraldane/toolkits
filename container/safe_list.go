@@ -21,6 +21,13 @@ func (this *SafeList) PushFront(v interface{}) *list.Element {
 	return e
 }
 
+func (this *SafeList) PushBack(v interface{}) *list.Element {
+	this.Lock()
+	e := this.L.PushBack(v)
+	this.Unlock()
+	return e
+}
+
 func (this *SafeList) PushFrontBatch(vs []interface{}) {
 	this.Lock()
 	for _, item := range vs {
