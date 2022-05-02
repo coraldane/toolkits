@@ -5,32 +5,30 @@ import (
 	"sync"
 )
 
-type SafeList[T any] struct {
+type SafeList struct {
 	sync.RWMutex
 	L *list.List
 }
 
-func NewSafeList[T any]() *SafeList[T] {
-	result := &SafeList[T]{}
-	result.L = list.New()
-	return result
+func NewSafeList() *SafeList {
+	return &SafeList{L: list.New()}
 }
 
-func (this *SafeList[T]) PushFront(v T) *list.Element {
+func (this *SafeList) PushFront(v interface{}) *list.Element {
 	this.Lock()
 	e := this.L.PushFront(v)
 	this.Unlock()
 	return e
 }
 
-func (this *SafeList[T]) PushBack(v T) *list.Element {
+func (this *SafeList) PushBack(v interface{}) *list.Element {
 	this.Lock()
 	e := this.L.PushBack(v)
 	this.Unlock()
 	return e
 }
 
-func (this *SafeList[T]) PushFrontBatch(vs []T) {
+func (this *SafeList) PushFrontBatch(vs []interface{}) {
 	this.Lock()
 	for _, item := range vs {
 		this.L.PushFront(item)
@@ -38,7 +36,7 @@ func (this *SafeList[T]) PushFrontBatch(vs []T) {
 	this.Unlock()
 }
 
-func (this *SafeList[T]) PopBack() T {
+func (this *SafeList) PopBack() interface{} {
 	this.Lock()
 
 	if elem := this.L.Back(); elem != nil {
@@ -51,20 +49,20 @@ func (this *SafeList[T]) PopBack() T {
 	return nil
 }
 
-func (this *SafeList[T]) PopBackBy(max int) []T {
+func (this *SafeList) PopBackBy(max int) []interface{} {
 	this.Lock()
 
 	count := this.len()
 	if count == 0 {
 		this.Unlock()
-		return []T{}
+		return []interface{}{}
 	}
 
 	if count > max {
 		count = max
 	}
 
-	items := make([]T, 0, count)
+	items := make([]interface{}, 0, count)
 	for i := 0; i < count; i++ {
 		item := this.L.Remove(this.L.Back())
 		items = append(items, item)
@@ -74,16 +72,16 @@ func (this *SafeList[T]) PopBackBy(max int) []T {
 	return items
 }
 
-func (this *SafeList[T]) PopBackAll() []T {
+func (this *SafeList) PopBackAll() []interface{} {
 	this.Lock()
 
 	count := this.len()
 	if count == 0 {
 		this.Unlock()
-		return []T{}
+		return []interface{}{}
 	}
 
-	items := make([]T, 0, count)
+	items := make([]interface{}, 0, count)
 	for i := 0; i < count; i++ {
 		item := this.L.Remove(this.L.Back())
 		items = append(items, item)
@@ -93,7 +91,7 @@ func (this *SafeList[T]) PopBackAll() []T {
 	return items
 }
 
-func (this *SafeList[T]) Remove(e *list.Element) T {
+func (this *SafeList) Remove(e *list.Element) interface{} {
 	this.Lock()
 	defer this.Unlock()
 	return this.L.Remove(e)
@@ -105,39 +103,39 @@ func (this *SafeList) RemoveAll() {
 	this.Unlock()
 }
 
-func (this *SafeList[T]) FrontAll() []T {
+func (this *SafeList) FrontAll() []interface{} {
 	this.RLock()
 	defer this.RUnlock()
 
 	count := this.len()
 	if count == 0 {
-		return []T{}
+		return []interface{}{}
 	}
 
-	items := make([]T, 0, count)
+	items := make([]interface{}, 0, count)
 	for e := this.L.Front(); e != nil; e = e.Next() {
 		items = append(items, e.Value)
 	}
 	return items
 }
 
-func (this *SafeList[T]) BackAll() []T {
+func (this *SafeList) BackAll() []interface{} {
 	this.RLock()
 	defer this.RUnlock()
 
 	count := this.len()
 	if count == 0 {
-		return []T{}
+		return []interface{}{}
 	}
 
-	items := make([]T, 0, count)
+	items := make([]interface{}, 0, count)
 	for e := this.L.Back(); e != nil; e = e.Prev() {
 		items = append(items, e.Value)
 	}
 	return items
 }
 
-func (this *SafeList[T]) Front() T {
+func (this *SafeList) Front() interface{} {
 	this.RLock()
 
 	if f := this.L.Front(); f != nil {
@@ -157,4 +155,65 @@ func (this *SafeList) Len() int {
 
 func (this *SafeList) len() int {
 	return this.L.Len()
+}
+
+// SafeList with Limited Size
+type SafeListLimited struct {
+	maxSize int
+	SL      *SafeList
+}
+
+func NewSafeListLimited(maxSize int) *SafeListLimited {
+	return &SafeListLimited{SL: NewSafeList(), maxSize: maxSize}
+}
+
+func (this *SafeListLimited) PopBack() interface{} {
+	return this.SL.PopBack()
+}
+
+func (this *SafeListLimited) PopBackBy(max int) []interface{} {
+	return this.SL.PopBackBy(max)
+}
+
+func (this *SafeListLimited) PushFront(v interface{}) bool {
+	if this.SL.Len() >= this.maxSize {
+		return false
+	}
+
+	this.SL.PushFront(v)
+	return true
+}
+
+func (this *SafeListLimited) PushFrontBatch(vs []interface{}) bool {
+	if this.SL.Len() >= this.maxSize {
+		return false
+	}
+
+	this.SL.PushFrontBatch(vs)
+	return true
+}
+
+func (this *SafeListLimited) PushFrontViolently(v interface{}) bool {
+	this.SL.PushFront(v)
+	if this.SL.Len() > this.maxSize {
+		this.SL.PopBack()
+	}
+
+	return true
+}
+
+func (this *SafeListLimited) RemoveAll() {
+	this.SL.RemoveAll()
+}
+
+func (this *SafeListLimited) Front() interface{} {
+	return this.SL.Front()
+}
+
+func (this *SafeListLimited) FrontAll() []interface{} {
+	return this.SL.FrontAll()
+}
+
+func (this *SafeListLimited) Len() int {
+	return this.SL.Len()
 }
