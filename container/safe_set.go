@@ -4,7 +4,7 @@ import (
 	"sync"
 )
 
-type SafeSet[T any] struct {
+type SafeSet struct {
 	sync.RWMutex
 	M map[interface{}]bool
 }
