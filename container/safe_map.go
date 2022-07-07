@@ -1,94 +1,85 @@
 package container
 
 import (
+	"reflect"
 	"sync"
 )
 
-type SafeMap struct {
-	sync.RWMutex
-	M map[string]interface{}
+type SafeMap[Key comparable, Value any] struct {
+	M sync.Map
 }
 
-func NewSafeMap() *SafeMap {
-	return &SafeMap{
-		M: make(map[string]interface{}),
+func NewSafeMap[Key, Value]() *SafeMap[Key, Value] {
+	return &SafeMap[Key, Value]{
+		M: sync.Map{},
 	}
 }
 
-func (this *SafeMap) Put(key string, val interface{}) {
-	this.Lock()
-	this.M[key] = val
-	this.Unlock()
+func (this *SafeMap[Key, Value]) Put(key Key, val Value) {
+	this.M.Store(key, val)
 }
 
-func (this *SafeMap) Get(key string) (interface{}, bool) {
-	this.RLock()
-	val, exists := this.M[key]
-	this.RUnlock()
-	return val, exists
-}
-
-func (this *SafeMap) Remove(key string) {
-	this.Lock()
-	delete(this.M, key)
-	this.Unlock()
-}
-
-func (this *SafeMap) GetAndRemove(key string) (interface{}, bool) {
-	this.Lock()
-	val, exists := this.M[key]
-	if exists {
-		delete(this.M, key)
+func (this *SafeMap[Key, Value]) Get(key Key) (Value, bool) {
+	val, ok := this.M.Load(key)
+	if ok {
+		return val.(Value), true
 	}
-	this.Unlock()
-	return val, exists
+	return nil, ok
 }
 
-func (this *SafeMap) Clear() {
-	this.Lock()
-	this.M = make(map[string]interface{})
-	this.Unlock()
+func (this *SafeMap[Key, Value]) Delete(key Key) {
+	this.M.Delete(key)
 }
 
-func (this *SafeMap) Keys() []string {
-	this.RLock()
-	defer this.RUnlock()
-
-	keys := make([]string, 0)
-	for key, _ := range this.M {
-		keys = append(keys, key)
-	}
-	return keys
+func (this *SafeMap[Key, Value]) Clear() {
+	this.M.Range(func(key, val any) bool {
+		this.M.Delete(key)
+		return true
+	})
 }
 
-func (this *SafeMap) Slice() []interface{} {
-	this.RLock()
-	defer this.RUnlock()
+func (this *SafeMap[Key, Value]) Keys() []Key {
+	result := make([]Key, 0)
+	this.M.Range(func(k, v any) bool {
+		keyObj := k.(Key)
+		result = append(result, keyObj)
+		return true
+	})
 
-	vals := make([]interface{}, 0)
-	for _, val := range this.M {
-		vals = append(vals, val)
-	}
-	return vals
+	return result
 }
 
-func (this *SafeMap) ContainsKey(key string) bool {
-	this.RLock()
-	_, exists := this.M[key]
-	this.RUnlock()
-	return exists
+func (this *SafeMap[Key, Value]) Range(fn func(key Key, val Value) bool) {
+	this.M.Range(func(k, v any) bool {
+		keyObj := k.(Key)
+		valObj := v.(Value)
+		res := fn(keyObj, valObj)
+		return res
+	})
 }
 
-func (this *SafeMap) Size() int {
-	this.RLock()
-	len := len(this.M)
-	this.RUnlock()
-	return len
+func (this *SafeMap[Key, Value]) ContainsKey(key Key) bool {
+	var found bool
+	this.M.Range(func(k, val any) bool {
+		keyObj := k.(Key)
+		if reflect.DeepEqual(keyObj, key) {
+			found = true
+			return false
+		}
+		return true
+	})
+	return found
 }
 
-func (this *SafeMap) IsEmpty() bool {
-	this.RLock()
-	empty := 0 == len(this.M)
-	this.RUnlock()
-	return empty
+func (this *SafeMap[Key, Value]) Size() int {
+	rowCount := 0
+	this.M.Range(func(key, val any) bool {
+		rowCount++
+		return true
+	})
+	return rowCount
+}
+
+func (this *SafeMap[Key, Value]) IsEmpty() bool {
+	return this.Size() == 0
 }
