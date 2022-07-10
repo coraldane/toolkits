@@ -9,8 +9,8 @@ type SafeSet[Value any] struct {
 	M sync.Map
 }
 
-func NewSafeSet() *SafeSet {
-	return &SafeSet{
+func NewSafeSet[Value any]() *SafeSet[Value] {
+	return &SafeSet[Value]{
 		M: sync.Map{},
 	}
 }

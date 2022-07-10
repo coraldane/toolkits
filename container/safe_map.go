@@ -9,7 +9,7 @@ type SafeMap[Key comparable, Value any] struct {
 	M sync.Map
 }
 
-func NewSafeMap[Key, Value]() *SafeMap[Key, Value] {
+func NewSafeMap[Key comparable, Value any]() *SafeMap[Key, Value] {
 	return &SafeMap[Key, Value]{
 		M: sync.Map{},
 	}
