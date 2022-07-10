@@ -19,12 +19,12 @@ func (this *SafeMap[Key, Value]) Put(key Key, val Value) {
 	this.M.Store(key, val)
 }
 
-func (this *SafeMap[Key, Value]) Get(key Key) (Value, bool) {
+func (this *SafeMap[Key, Value]) Get(key Key) (any, bool) {
 	val, ok := this.M.Load(key)
 	if ok {
-		return val.(Value), true
+		return val, true
 	}
-	return Value{}, ok
+	return nil, ok
 }
 
 func (this *SafeMap[Key, Value]) Delete(key Key) {

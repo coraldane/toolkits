@@ -28,12 +28,12 @@ func (this *DeepMap[F, K, V]) Put(field F, key K, val V) {
 	this.table.Store(field, children)
 }
 
-func (this *DeepMap[F, K, V]) Get(field F, key K) (V, bool) {
+func (this *DeepMap[F, K, V]) Get(field F, key K) (any, bool) {
 	children := this.GetChildren(field)
 	if nil != children {
 		return children.Get(key)
 	}
-	return V{}, false
+	return nil, false
 }
 
 func (this *DeepMap[F, K, V]) Keys() []F {
