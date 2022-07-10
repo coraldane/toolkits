@@ -33,7 +33,7 @@ func (this *DeepMap[F, K, V]) Get(field F, key K) (V, bool) {
 	if nil != children {
 		return children.Get(key)
 	}
-	return nil, false
+	return V{}, false
 }
 
 func (this *DeepMap[F, K, V]) Keys() []F {

@@ -24,7 +24,7 @@ func (this *SafeMap[Key, Value]) Get(key Key) (Value, bool) {
 	if ok {
 		return val.(Value), true
 	}
-	return nil, ok
+	return Value{}, ok
 }
 
 func (this *SafeMap[Key, Value]) Delete(key Key) {
@@ -45,7 +45,6 @@ func (this *SafeMap[Key, Value]) Keys() []Key {
 		result = append(result, keyObj)
 		return true
 	})
-
 	return result
 }
 
