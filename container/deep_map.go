@@ -4,61 +4,70 @@ import (
 	"sync"
 )
 
-type DeepMap struct {
+// DeepMap /**
+/**
+Data structure
+{ F: { K : V } }
+*/
+type DeepMap[F, K comparable, V any] struct {
 	table *sync.Map
 }
 
-func NewDeepMap() *DeepMap {
-	inst := &DeepMap{}
+func NewDeepMap[F, K comparable, V any]() *DeepMap[F, K, V] {
+	inst := &DeepMap[F, K, V]{}
 	inst.table = &sync.Map{}
 	return inst
 }
 
-func (this *DeepMap) Put(field, key, val interface{}) {
+func (this *DeepMap[F, K, V]) Put(field F, key K, val V) {
 	children := this.GetChildren(field)
 	if nil == children {
-		children = &sync.Map{}
+		children = NewSafeMap[K, V]()
 	}
-	children.Store(key, val)
+	children.Put(key, val)
 	this.table.Store(field, children)
 }
 
-func (this *DeepMap) Get(field, key interface{}) interface{} {
+func (this *DeepMap[F, K, V]) Get(field F, key K) (any, bool) {
 	children := this.GetChildren(field)
 	if nil != children {
-		retVal, ok := children.Load(key)
-		if ok {
-			return retVal
-		}
+		return children.Get(key)
 	}
-	return nil
+	return nil, false
 }
 
-func (this *DeepMap) ForEach(fn func(key, val interface{}) bool) {
-	this.table.Range(fn)
+func (this *DeepMap[F, K, V]) Keys() []F {
+	result := make([]F, 0)
+	this.table.Range(func(key, val any) bool {
+		result = append(result, key.(F))
+		return true
+	})
+	return result
 }
 
-func (this *DeepMap) GetChildren(field interface{}) *sync.Map {
-	child, ok := this.table.Load(field)
-	if ok {
-		retVal, _ := child.(*sync.Map)
-		return retVal
+func (this *DeepMap[F, K, V]) GetChildren(field F) *SafeMap[K, V] {
+	obj, ok := this.table.Load(field)
+	var children *SafeMap[K, V]
+	if !ok {
+		children = NewSafeMap[K, V]()
+	} else {
+		children = obj.(*SafeMap[K, V])
 	}
-	return nil
+	return children
 }
 
-func (this *DeepMap) Remove(field, key interface{}) {
+func (this *DeepMap[F, K, V]) Remove(field F, key K) {
 	children := this.GetChildren(field)
 	if nil != children {
 		children.Delete(key)
 	}
 }
 
-func (this *DeepMap) RemoveChildren(field interface{}) {
+func (this *DeepMap[F, K, V]) RemoveChildren(field F) {
 	this.table.Delete(field)
 }
 
-func (this *DeepMap) Clear() {
+func (this *DeepMap[F, K, V]) Clear() {
 	this.table.Range(func(key, val interface{}) bool {
 		this.table.Delete(key)
 		return true
