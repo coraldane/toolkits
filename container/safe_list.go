@@ -5,32 +5,32 @@ import (
 	"sync"
 )
 
-type SafeList struct {
+type SafeList[T any] struct {
 	sync.RWMutex
 	L *list.List
 }
 
-func NewSafeList() *SafeList {
-	result := &SafeList{}
+func NewSafeList[T any]() *SafeList[T] {
+	result := &SafeList[T]{}
 	result.L = list.New()
 	return result
 }
 
-func (this *SafeList) PushFront(v any) *list.Element {
+func (this *SafeList[T]) PushFront(v T) *list.Element {
 	this.Lock()
 	e := this.L.PushFront(v)
 	this.Unlock()
 	return e
 }
 
-func (this *SafeList) PushBack(v any) *list.Element {
+func (this *SafeList[T]) PushBack(v T) *list.Element {
 	this.Lock()
 	e := this.L.PushBack(v)
 	this.Unlock()
 	return e
 }
 
-func (this *SafeList) PushFrontBatch(vs []any) {
+func (this *SafeList[T]) PushFrontBatch(vs []T) {
 	this.Lock()
 	for _, item := range vs {
 		this.L.PushFront(item)
@@ -38,124 +38,126 @@ func (this *SafeList) PushFrontBatch(vs []any) {
 	this.Unlock()
 }
 
-func (this *SafeList) PopBack() any {
+func (this *SafeList[T]) PopBack() T {
 	this.Lock()
 
 	if elem := this.L.Back(); elem != nil {
 		item := this.L.Remove(elem)
 		this.Unlock()
-		return item
+		return item.(T)
 	}
 
 	this.Unlock()
-	return nil
+
+	var res T
+	return res
 }
 
-func (this *SafeList) PopBackBy(max int) (int, []any) {
+func (this *SafeList[T]) PopBackBy(max int) (int, []T) {
 	this.Lock()
 
 	count := this.len()
 	if count == 0 {
 		this.Unlock()
-		return 0, []any{}
+		return 0, []T{}
 	}
 
 	if count > max {
 		count = max
 	}
 
-	items := make([]any, 0, count)
+	items := make([]T, 0, count)
 	for i := 0; i < count; i++ {
 		item := this.L.Remove(this.L.Back())
-		items = append(items, item)
+		items = append(items, item.(T))
 	}
 
 	this.Unlock()
 	return count, items
 }
 
-func (this *SafeList) PopBackAll() []any {
+func (this *SafeList[T]) PopBackAll() []T {
 	this.Lock()
 
 	count := this.len()
 	if count == 0 {
 		this.Unlock()
-		return []any{}
+		return []T{}
 	}
 
-	items := make([]any, 0, count)
+	items := make([]T, 0, count)
 	for i := 0; i < count; i++ {
 		item := this.L.Remove(this.L.Back())
-		items = append(items, item)
+		items = append(items, item.(T))
 	}
 
 	this.Unlock()
 	return items
 }
 
-func (this *SafeList) Remove(e *list.Element) any {
+func (this *SafeList[T]) Remove(e *list.Element) T {
 	this.Lock()
 	defer this.Unlock()
-	return this.L.Remove(e)
+	return this.L.Remove(e).(T)
 }
 
-func (this *SafeList) RemoveAll() {
+func (this *SafeList[T]) RemoveAll() {
 	this.Lock()
 	this.L = list.New()
 	this.Unlock()
 }
 
-func (this *SafeList) FrontAll() []any {
+func (this *SafeList[T]) FrontAll() []T {
 	this.RLock()
 	defer this.RUnlock()
 
 	count := this.len()
 	if count == 0 {
-		return []any{}
+		return []T{}
 	}
 
-	items := make([]any, 0, count)
+	items := make([]T, 0, count)
 	for e := this.L.Front(); e != nil; e = e.Next() {
-		items = append(items, e.Value)
+		items = append(items, e.Value.(T))
 	}
 	return items
 }
 
-func (this *SafeList) BackAll() []any {
+func (this *SafeList[T]) BackAll() []T {
 	this.RLock()
 	defer this.RUnlock()
 
 	count := this.len()
 	if count == 0 {
-		return []any{}
+		return []T{}
 	}
 
-	items := make([]any, 0, count)
+	items := make([]T, 0, count)
 	for e := this.L.Back(); e != nil; e = e.Prev() {
-		items = append(items, e.Value)
+		items = append(items, e.Value.(T))
 	}
 	return items
 }
 
-func (this *SafeList) Front() any {
+func (this *SafeList[T]) Front() T {
 	this.RLock()
 
 	if f := this.L.Front(); f != nil {
 		this.RUnlock()
-		return f.Value
+		return f.Value.(T)
 	}
 
 	this.RUnlock()
-	var res any
+	var res T
 	return res
 }
 
-func (this *SafeList) Len() int {
+func (this *SafeList[T]) Len() int {
 	this.RLock()
 	defer this.RUnlock()
 	return this.len()
 }
 
-func (this *SafeList) len() int {
+func (this *SafeList[T]) len() int {
 	return this.L.Len()
 }
