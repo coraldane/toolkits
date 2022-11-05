@@ -53,13 +53,13 @@ func (this *SafeList[T]) PopBack() T {
 	return res
 }
 
-func (this *SafeList[T]) PopBackBy(max int) []T {
+func (this *SafeList[T]) PopBackBy(max int) (int, []T) {
 	this.Lock()
 
 	count := this.len()
 	if count == 0 {
 		this.Unlock()
-		return []T{}
+		return 0, []T{}
 	}
 
 	if count > max {
@@ -73,7 +73,7 @@ func (this *SafeList[T]) PopBackBy(max int) []T {
 	}
 
 	this.Unlock()
-	return items
+	return count, items
 }
 
 func (this *SafeList[T]) PopBackAll() []T {
