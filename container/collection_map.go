@@ -37,11 +37,11 @@ func (this *CollectionMap[Key, Value]) Get(key Key) []Value {
 	return list.PopBackAll()
 }
 
-func (this *CollectionMap[Key, Value]) GetBackBy(key Key, max int) []Value {
+func (this *CollectionMap[Key, Value]) GetBackBy(key Key, max int) (int, []Value) {
 	result := make([]Value, 0)
 	obj, ok := this.DataMap.Load(key)
 	if !ok {
-		return result
+		return 0, result
 	}
 
 	list := obj.(*SafeList[Value])
