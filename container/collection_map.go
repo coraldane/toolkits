@@ -34,7 +34,7 @@ func (this *CollectionMap[Key, Value]) Get(key Key) []Value {
 	}
 
 	list := obj.(*SafeList[Value])
-	return list.PopBackAll()
+	return list.BackAll()
 }
 
 func (this *CollectionMap[Key, Value]) GetBackBy(key Key, max int) (int, []Value) {
@@ -48,11 +48,20 @@ func (this *CollectionMap[Key, Value]) GetBackBy(key Key, max int) (int, []Value
 	return list.BackBy(max)
 }
 
+func (this *CollectionMap[Key, Value]) Len() int {
+	rowCount := 0
+	this.DataMap.Range(func(key, val any) bool {
+		rowCount++
+		return true
+	})
+	return rowCount
+}
+
 func (this *CollectionMap[Key, Value]) Range(fn func(key Key, val []Value)) {
 	this.DataMap.Range(func(k, val any) bool {
 		newKey := k.(Key)
 		newVal := val.(*SafeList[Value])
-		fn(newKey, newVal.PopBackAll())
+		fn(newKey, newVal.BackAll())
 		return true
 	})
 }
