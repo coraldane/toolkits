@@ -26,6 +26,21 @@ func (this *CollectionMap[Key, Value]) Put(key Key, val Value) {
 	this.DataMap.Store(key, list)
 }
 
+func (this *CollectionMap[Key, Value]) PutValues(key Key, values ...Value) {
+	var list *SafeList[Value]
+	obj, ok := this.DataMap.Load(key)
+	if !ok {
+		list = NewSafeList[Value]()
+	} else {
+		list = obj.(*SafeList[Value])
+	}
+
+	for _, val := range values {
+		list.PushFront(val)
+	}
+	this.DataMap.Store(key, list)
+}
+
 func (this *CollectionMap[Key, Value]) Get(key Key) []Value {
 	result := make([]Value, 0)
 	obj, ok := this.DataMap.Load(key)

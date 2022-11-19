@@ -40,6 +40,15 @@ func (this *DeepCollectionMap[F, K, V]) Keys() []F {
 	return result
 }
 
+func (this *DeepCollectionMap[F, K, V]) Len() int {
+	rowCount := 0
+	this.table.Range(func(key, val any) bool {
+		rowCount++
+		return true
+	})
+	return rowCount
+}
+
 func (this *DeepCollectionMap[F, K, V]) GetChildren(field F) *CollectionMap[K, V] {
 	obj, ok := this.table.Load(field)
 	var children *CollectionMap[K, V]
