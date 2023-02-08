@@ -22,7 +22,7 @@ func (this *CollectionMap[Key, Value]) Put(key Key, val Value) {
 	} else {
 		list = obj.(*SafeList[Value])
 	}
-	list.PushFront(val)
+	list.PushBack(val)
 	this.DataMap.Store(key, list)
 }
 
@@ -36,7 +36,7 @@ func (this *CollectionMap[Key, Value]) PutValues(key Key, values ...Value) {
 	}
 
 	for _, val := range values {
-		list.PushFront(val)
+		list.PushBack(val)
 	}
 	this.DataMap.Store(key, list)
 }
