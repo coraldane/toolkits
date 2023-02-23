@@ -14,8 +14,8 @@ type LinkedHashMap struct {
 	keyMap map[interface{}]int
 }
 
-func NewLinkedHashMap() LinkedHashMap {
-	retMap := LinkedHashMap{}
+func NewLinkedHashMap() *LinkedHashMap {
+	retMap := &LinkedHashMap{}
 	retMap.keyMap = make(map[interface{}]int)
 	return retMap
 }
