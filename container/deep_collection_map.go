@@ -14,6 +14,11 @@ func NewDeepCollectionMap[F, K comparable, V any]() *DeepCollectionMap[F, K, V] 
 	return inst
 }
 
+func (this *DeepCollectionMap[F, K, V]) ContainsKey(field F) bool {
+	_, ok := this.table.Load(field)
+	return ok
+}
+
 func (this *DeepCollectionMap[F, K, V]) Put(field F, key K, val V) {
 	children := this.GetChildren(field)
 	if nil == children {

@@ -14,6 +14,11 @@ func NewCollectionMap[K comparable, V any]() *CollectionMap[K, V] {
 	}
 }
 
+func (this *CollectionMap[Key, Value]) ContainsKey(key Key) bool {
+	_, ok := this.DataMap.Load(key)
+	return ok
+}
+
 func (this *CollectionMap[Key, Value]) Put(key Key, val Value) {
 	var list *SafeList[Value]
 	obj, ok := this.DataMap.Load(key)
