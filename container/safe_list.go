@@ -123,6 +123,33 @@ func (this *SafeList[T]) FrontAll() []T {
 	return items
 }
 
+func (this *SafeList[T]) FrontBy(max int) (int, []T) {
+	this.Lock()
+
+	count := this.len()
+	if count == 0 {
+		this.Unlock()
+		return 0, []T{}
+	}
+
+	if count > max {
+		count = max
+	}
+
+	items := make([]T, 0, count)
+	index := 0
+	for e := this.L.Front(); e != nil; e = e.Next() {
+		items = append(items, e.Value.(T))
+		index++
+		if index >= count {
+			break
+		}
+	}
+
+	this.Unlock()
+	return count, items
+}
+
 func (this *SafeList[T]) BackBy(max int) (int, []T) {
 	this.Lock()
 
