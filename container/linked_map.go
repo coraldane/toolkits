@@ -48,8 +48,7 @@ func (this *LinkedMap[K, V]) SetEscapeHTML(on bool) {
 }
 
 func (this *LinkedMap[K, V]) Get(key K) (any, bool) {
-	val, exists := this.values.Load(key)
-	return val, exists
+	return this.values.Load(key)
 }
 
 func (this *LinkedMap[K, V]) Set(key K, value V) {
