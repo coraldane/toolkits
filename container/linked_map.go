@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"sort"
+	"sync"
 )
 
 type Pair[K comparable, V any] struct {
@@ -30,81 +31,75 @@ func (a ByPair[K, V]) Less(i, j int) bool { return a.LessFunc(a.Pairs[i], a.Pair
 
 type LinkedMap[K comparable, V any] struct {
 	keys       []K
-	values     map[K]V
+	values     sync.Map
 	escapeHTML bool
 }
 
 func NewLinkedMap[K comparable, V any]() *LinkedMap[K, V] {
 	inst := &LinkedMap[K, V]{}
 	inst.keys = []K{}
-	inst.values = make(map[K]V)
+	inst.values = sync.Map{}
 	inst.escapeHTML = true
 	return inst
 }
 
-func (o *LinkedMap[K, V]) SetEscapeHTML(on bool) {
-	o.escapeHTML = on
+func (this *LinkedMap[K, V]) SetEscapeHTML(on bool) {
+	this.escapeHTML = on
 }
 
-func (o *LinkedMap[K, V]) Get(key K) (V, bool) {
-	val, exists := o.values[key]
-	return val, exists
+func (this *LinkedMap[K, V]) Get(key K) (V, bool) {
+	val, exists := this.values.Load(key)
+	return val.(V), exists
 }
 
-func (o *LinkedMap[K, V]) Set(key K, value V) {
-	_, exists := o.values[key]
-	if !exists {
-		o.keys = append(o.keys, key)
-	}
-	o.values[key] = value
+func (this *LinkedMap[K, V]) Set(key K, value V) {
+	this.values.Store(key, value)
 }
 
-func (o *LinkedMap[K, V]) Delete(key K) {
+func (this *LinkedMap[K, V]) Delete(key K) {
 	// check key is in use
-	_, ok := o.values[key]
-	if !ok {
-		return
-	}
+	this.values.LoadAndDelete(key)
 	// remove from keys
-	for i, k := range o.keys {
+	for i, k := range this.keys {
 		if k == key {
-			o.keys = append(o.keys[:i], o.keys[i+1:]...)
+			this.keys = append(this.keys[:i], this.keys[i+1:]...)
 			break
 		}
 	}
-	// remove from values
-	delete(o.values, key)
 }
 
-func (o *LinkedMap[K, V]) Keys() []K {
-	return o.keys
+func (this *LinkedMap[K, V]) Keys() []K {
+	return this.keys
 }
 
 // SortKeys Sort the map keys using your sort func
-func (o *LinkedMap[K, V]) SortKeys(sortFunc func(keys []K)) {
-	sortFunc(o.keys)
+func (this *LinkedMap[K, V]) SortKeys(sortFunc func(keys []K)) {
+	sortFunc(this.keys)
 }
 
 // Sort Sort the map using your sort func
-func (o *LinkedMap[K, V]) Sort(lessFunc func(a *Pair[K, V], b *Pair[K, V]) bool) {
-	pairs := make([]*Pair[K, V], len(o.keys))
-	for i, key := range o.keys {
-		pairs[i] = &Pair[K, V]{key, o.values[key]}
+func (this *LinkedMap[K, V]) Sort(lessFunc func(a *Pair[K, V], b *Pair[K, V]) bool) {
+	pairs := make([]*Pair[K, V], len(this.keys))
+	for i, key := range this.keys {
+		val, ok := this.values.Load(key)
+		if ok {
+			pairs[i] = &Pair[K, V]{key, val.(V)}
+		}
 	}
 
 	sort.Sort(ByPair[K, V]{pairs, lessFunc})
 
 	for i, pair := range pairs {
-		o.keys[i] = pair.key
+		this.keys[i] = pair.key
 	}
 }
 
-func (o LinkedMap[K, V]) MarshalJSON() ([]byte, error) {
+func (this *LinkedMap[K, V]) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	buf.WriteByte('{')
 	encoder := json.NewEncoder(&buf)
-	encoder.SetEscapeHTML(o.escapeHTML)
-	for i, k := range o.keys {
+	encoder.SetEscapeHTML(this.escapeHTML)
+	for i, k := range this.keys {
 		if i > 0 {
 			buf.WriteByte(',')
 		}
@@ -114,7 +109,8 @@ func (o LinkedMap[K, V]) MarshalJSON() ([]byte, error) {
 		}
 		buf.WriteByte(':')
 		// add value
-		if err := encoder.Encode(o.values[k]); err != nil {
+		val, _ := this.Get(k)
+		if err := encoder.Encode(val); err != nil {
 			return nil, err
 		}
 	}
