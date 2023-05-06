@@ -53,6 +53,9 @@ func (this *LinkedMap[K, V]) Get(key K) (V, bool) {
 }
 
 func (this *LinkedMap[K, V]) Set(key K, value V) {
+	if _, ok := this.values.Load(key); !ok {
+		this.keys = append(this.keys, key)
+	}
 	this.values.Store(key, value)
 }
 
