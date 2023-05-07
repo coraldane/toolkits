@@ -68,8 +68,10 @@ func (p *TaskPool) AddTask(task Task) error {
 	if task.WorkerId > len(p.workers) {
 		return errors.New("WorkerIdInvalid")
 	}
-	p.taskChan <- task
+
 	p.wg.Add(1)
+	p.taskChan <- task
+	
 	return nil
 }
 
