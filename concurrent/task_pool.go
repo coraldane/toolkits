@@ -50,11 +50,11 @@ func NewTaskPool(workerNum int, taskNum int) *TaskPool {
 		taskChan:  taskChan,
 		workers:   workers,
 	}
-	inst.Start()
+	inst.start()
 	return inst
 }
 
-func (p *TaskPool) Start() {
+func (p *TaskPool) start() {
 	go func() {
 		for task := range p.taskChan {
 			worker := p.workers[task.WorkerId]
