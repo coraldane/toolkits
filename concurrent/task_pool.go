@@ -71,7 +71,7 @@ func (p *TaskPool) AddTask(task Task) error {
 
 	p.wg.Add(1)
 	p.taskChan <- task
-	
+
 	return nil
 }
 
