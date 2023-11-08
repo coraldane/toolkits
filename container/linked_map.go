@@ -51,7 +51,7 @@ func (this *LinkedMap[K, V]) Get(key K) (any, bool) {
 	return this.values.Load(key)
 }
 
-func (this *LinkedMap[K, V]) Set(key K, value V) {
+func (this *LinkedMap[K, V]) Put(key K, value V) {
 	if _, ok := this.values.Load(key); !ok {
 		this.keys = append(this.keys, key)
 	}
@@ -72,6 +72,10 @@ func (this *LinkedMap[K, V]) Delete(key K) {
 
 func (this *LinkedMap[K, V]) Keys() []K {
 	return this.keys
+}
+
+func (this *LinkedMap[K, V]) Size() int {
+	return len(this.keys)
 }
 
 // SortKeys Sort the map keys using your sort func
