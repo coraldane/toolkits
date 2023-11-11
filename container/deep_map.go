@@ -27,7 +27,7 @@ func (this *DeepMap[F, K, V]) ContainsKey(key F) bool {
 func (this *DeepMap[F, K, V]) Put(field F, key K, val V) {
 	children := this.GetChildren(field)
 	if nil == children {
-		children = NewSafeMap[K, V]()
+		children = NewLinkedMap[K, V]()
 	}
 	children.Put(key, val)
 	this.table.Store(field, children)
@@ -50,13 +50,13 @@ func (this *DeepMap[F, K, V]) Keys() []F {
 	return result
 }
 
-func (this *DeepMap[F, K, V]) GetChildren(field F) *SafeMap[K, V] {
+func (this *DeepMap[F, K, V]) GetChildren(field F) *LinkedMap[K, V] {
 	obj, ok := this.table.Load(field)
-	var children *SafeMap[K, V]
+	var children *LinkedMap[K, V]
 	if !ok {
-		children = NewSafeMap[K, V]()
+		children = NewLinkedMap[K, V]()
 	} else {
-		children = obj.(*SafeMap[K, V])
+		children = obj.(*LinkedMap[K, V])
 	}
 	return children
 }
