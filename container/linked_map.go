@@ -78,6 +78,15 @@ func (this *LinkedMap[K, V]) Size() int {
 	return len(this.keys)
 }
 
+func (this *LinkedMap[Key, Value]) Range(fn func(key Key, val Value) bool) {
+	this.values.Range(func(k, v any) bool {
+		keyObj := k.(Key)
+		valObj := v.(Value)
+		res := fn(keyObj, valObj)
+		return res
+	})
+}
+
 // SortKeys Sort the map keys using your sort func
 func (this *LinkedMap[K, V]) SortKeys(sortFunc func(keys []K)) {
 	sortFunc(this.keys)
