@@ -19,3 +19,16 @@ func Min[N Number](left, right N) N {
 		return left
 	}
 }
+
+func ScaleDecimal(inputValue float64, scale int) float64 {
+	var delta float64
+	if inputValue > 0 {
+		delta = 0.5
+	} else {
+		delta = -0.5
+	}
+	return math.Trunc(inputValue*math.Pow10(scale)+delta) / math.Pow10(scale)
+	//format := strings.Join([]string{"%.", "f"}, strconv.Itoa(scale))
+	//value, _ := strconv.ParseFloat(fmt.Sprintf(format, inputValue), 64)
+	//return value
+}
