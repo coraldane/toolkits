@@ -512,5 +512,10 @@ func (e *entry) tryExpungeLocked() (isExpunged bool) {
 }
 
 func (m *Map) Length() int {
-	return len(m.dirty)
+	var rows int32
+	m.Range(func(key, value any) bool {
+		atomic.AddInt32(&rows, 1)
+		return true
+	})
+	return int(rows)
 }
