@@ -1,16 +1,16 @@
 package container
 
 import (
-	"sync"
+	"gitee.com/coraldane/toolkits/concurrent"
 )
 
 type DeepCollectionMap[F, K comparable, V any] struct {
-	table *sync.Map
+	table *concurrent.Map
 }
 
 func NewDeepCollectionMap[F, K comparable, V any]() *DeepCollectionMap[F, K, V] {
 	inst := &DeepCollectionMap[F, K, V]{}
-	inst.table = &sync.Map{}
+	inst.table = &concurrent.Map{}
 	return inst
 }
 
@@ -45,13 +45,8 @@ func (this *DeepCollectionMap[F, K, V]) Keys() []F {
 	return result
 }
 
-func (this *DeepCollectionMap[F, K, V]) Len() int {
-	rowCount := 0
-	this.table.Range(func(key, val any) bool {
-		rowCount++
-		return true
-	})
-	return rowCount
+func (this *DeepCollectionMap[F, K, V]) Size() int {
+	return this.table.Length()
 }
 
 func (this *DeepCollectionMap[F, K, V]) GetChildren(field F) *CollectionMap[K, V] {

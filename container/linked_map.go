@@ -3,8 +3,8 @@ package container
 import (
 	"bytes"
 	"encoding/json"
+	"gitee.com/coraldane/toolkits/concurrent"
 	"sort"
-	"sync"
 )
 
 type Pair[K comparable, V any] struct {
@@ -31,14 +31,14 @@ func (a ByPair[K, V]) Less(i, j int) bool { return a.LessFunc(a.Pairs[i], a.Pair
 
 type LinkedMap[K comparable, V any] struct {
 	keys       []K
-	values     sync.Map
+	values     concurrent.Map
 	escapeHTML bool
 }
 
 func NewLinkedMap[K comparable, V any]() *LinkedMap[K, V] {
 	inst := &LinkedMap[K, V]{}
 	inst.keys = []K{}
-	inst.values = sync.Map{}
+	inst.values = concurrent.Map{}
 	inst.escapeHTML = true
 	return inst
 }

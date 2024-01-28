@@ -2,6 +2,7 @@ package cache
 
 import (
 	"github.com/coraldane/logger"
+	"gitee.com/coraldane/toolkits/concurrent"
 	"sync"
 	"time"
 )
@@ -11,8 +12,8 @@ type TimeExpireCacheLoader struct {
 	expireDuration time.Duration
 	clearInterval  time.Duration
 	closed         chan struct{}
-	container      sync.Map
-	expireKeyMap   sync.Map
+	container      concurrent.Map
+	expireKeyMap   concurrent.Map
 }
 
 func NewTimeExpireLoader(fetcher Fetcher,
@@ -22,8 +23,8 @@ func NewTimeExpireLoader(fetcher Fetcher,
 		expireDuration: expire,
 		clearInterval:  clearInterval,
 		closed:         make(chan struct{}),
-		container:      sync.Map{},
-		expireKeyMap:   sync.Map{},
+		container:      concurrent.Map{},
+		expireKeyMap:   concurrent.Map{},
 	}
 	go loader.checkExpire()
 	//runtime.SetFinalizer(loader, loader.Close)

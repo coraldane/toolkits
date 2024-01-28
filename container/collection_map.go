@@ -1,16 +1,16 @@
 package container
 
 import (
-	"sync"
+	"gitee.com/coraldane/toolkits/concurrent"
 )
 
 type CollectionMap[Key comparable, Value any] struct {
-	DataMap sync.Map
+	DataMap concurrent.Map
 }
 
 func NewCollectionMap[K comparable, V any]() *CollectionMap[K, V] {
 	return &CollectionMap[K, V]{
-		DataMap: sync.Map{},
+		DataMap: concurrent.Map{},
 	}
 }
 
@@ -68,13 +68,8 @@ func (this *CollectionMap[Key, Value]) GetBackBy(key Key, max int) (int, []Value
 	return list.FrontBy(max)
 }
 
-func (this *CollectionMap[Key, Value]) Len() int {
-	rowCount := 0
-	this.DataMap.Range(func(key, val any) bool {
-		rowCount++
-		return true
-	})
-	return rowCount
+func (this *CollectionMap[Key, Value]) Size() int {
+	return this.DataMap.Length()
 }
 
 func (this *CollectionMap[Key, Value]) Range(fn func(key Key, val []Value)) {
