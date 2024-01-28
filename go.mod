@@ -7,6 +7,7 @@ require (
 	github.com/coraldane/dnspool v0.0.0-20180211015722-2340b77dddfd
 	github.com/coraldane/logger v1.0.1
 	github.com/pborman/uuid v1.2.1
+	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
 )
 
 require github.com/google/uuid v1.0.0 // indirect
