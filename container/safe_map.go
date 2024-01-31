@@ -1,6 +1,6 @@
 package container
 
-import "gitee.com/coraldane/toolkits/concurrent"
+import "github.com/coraldane/toolkits/concurrent"
 
 type SafeMap[Key comparable, Value any] struct {
 	M concurrent.Map

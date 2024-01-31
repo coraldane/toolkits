@@ -1,7 +1,7 @@
 package container
 
 import (
-	"gitee.com/coraldane/toolkits/concurrent"
+	"github.com/coraldane/toolkits/concurrent"
 )
 
 type CollectionMap[Key comparable, Value any] struct {

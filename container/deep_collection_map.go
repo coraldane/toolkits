@@ -1,7 +1,7 @@
 package container
 
 import (
-	"gitee.com/coraldane/toolkits/concurrent"
+	"github.com/coraldane/toolkits/concurrent"
 )
 
 type DeepCollectionMap[F, K comparable, V any] struct {

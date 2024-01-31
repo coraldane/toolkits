@@ -1,4 +1,4 @@
-module gitee.com/coraldane/toolkits
+module github.com/coraldane/toolkits
 
 go 1.18
 
