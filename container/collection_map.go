@@ -65,7 +65,7 @@ func (this *CollectionMap[Key, Value]) GetBackBy(key Key, max int) (int, []Value
 	}
 
 	list := obj.(*SafeList[Value])
-	return list.FrontBy(max)
+	return list.BackBy(max)
 }
 
 func (this *CollectionMap[Key, Value]) Size() int {
