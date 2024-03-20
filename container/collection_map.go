@@ -68,6 +68,17 @@ func (this *CollectionMap[Key, Value]) GetBackBy(key Key, max int) (int, []Value
 	return list.BackBy(max)
 }
 
+func (this *CollectionMap[Key, Value]) PopBackBy(key Key, max int) (int, []Value) {
+	result := make([]Value, 0)
+	obj, ok := this.DataMap.Load(key)
+	if !ok {
+		return 0, result
+	}
+
+	list := obj.(*SafeList[Value])
+	return list.PopBackBy(max)
+}
+
 func (this *CollectionMap[Key, Value]) Size() int {
 	return this.DataMap.Length()
 }
