@@ -3,7 +3,6 @@ package cache
 import (
 	"github.com/coraldane/logger"
 	"github.com/coraldane/toolkits/concurrent"
-	"sync"
 	"time"
 )
 
