@@ -2,9 +2,11 @@ github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394 h1:OYA+5W64v3OgClL+I
 github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394/go.mod h1:Q8n74mJTIgjX4RBBcHnJ05h//6/k6foqmgE45jTQtxg=
 github.com/coraldane/dnspool v0.0.0-20180211015722-2340b77dddfd h1:wa3AGhV0SWo4jK8AFuVYeGOe2PacizYGNiwTfJPzeLo=
 github.com/coraldane/dnspool v0.0.0-20180211015722-2340b77dddfd/go.mod h1:nuhOpce8DexxofuAElP8WlABkeFySHaVT6L28h6sxTs=
-github.com/coraldane/logger v0.0.0-20200423034437-f3eeecab5728 h1:47XjnP8SAUiFcvVSi4V3HWW/tVkxl5iJ86FtZLI+/XY=
-github.com/coraldane/logger v0.0.0-20200423034437-f3eeecab5728/go.mod h1:y/TJyGSnEMsVipCf6/cupoLv33riUPeTmEQ89ztU184=
+github.com/coraldane/logger v1.0.1 h1:QLJy8tRHcRjsEAOsMjFpnd3MVExh8D3UgdMxrLn5W8M=
+github.com/coraldane/logger v1.0.1/go.mod h1:y/TJyGSnEMsVipCf6/cupoLv33riUPeTmEQ89ztU184=
 github.com/google/uuid v1.0.0 h1:b4Gk+7WdP/d3HZH8EJsZpvV7EtDOgaZLtnaNGIu1adA=
 github.com/google/uuid v1.0.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/pborman/uuid v1.2.1 h1:+ZZIw58t/ozdjRaXh/3awHfmWRbzYxJoAdNJxe/3pvw=
 github.com/pborman/uuid v1.2.1/go.mod h1:X/NO0urCmaxf9VXbdlT7C2Yzkj2IKimNn4k+gtPdI/k=
+golang.org/x/exp v0.0.0-20240119083558-1b970713d09a h1:Q8/wZp0KX97QFTc2ywcOE0YRjZPVIx+MXInMzdvQqcA=
+golang.org/x/exp v0.0.0-20240119083558-1b970713d09a/go.mod h1:idGWGoKP1toJGkd5/ig9ZLuPcZBC3ewk7SzmH0uou08=

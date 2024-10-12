@@ -1,17 +1,16 @@
 package container
 
 import (
-	"sync"
-	"sync/atomic"
+	"github.com/coraldane/toolkits/concurrent"
 )
 
 type SafeSet[Value any] struct {
-	M sync.Map
+	M concurrent.Map
 }
 
 func NewSafeSet[Value any]() *SafeSet[Value] {
 	return &SafeSet[Value]{
-		M: sync.Map{},
+		M: concurrent.Map{},
 	}
 }
 
@@ -36,12 +35,7 @@ func (this *SafeSet[Value]) Contains(val Value) bool {
 }
 
 func (this *SafeSet[Value]) Size() int {
-	var rowCount int32
-	this.M.Range(func(key, val any) bool {
-		atomic.AddInt32(&rowCount, 1)
-		return true
-	})
-	return int(rowCount)
+	return this.M.Length()
 }
 
 func (this *SafeSet[Value]) ToSlice() []Value {

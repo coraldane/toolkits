@@ -1,17 +1,14 @@
 package container
 
-import (
-	"reflect"
-	"sync"
-)
+import "github.com/coraldane/toolkits/concurrent"
 
 type SafeMap[Key comparable, Value any] struct {
-	M sync.Map
+	M concurrent.Map
 }
 
 func NewSafeMap[Key comparable, Value any]() *SafeMap[Key, Value] {
 	return &SafeMap[Key, Value]{
-		M: sync.Map{},
+		M: concurrent.Map{},
 	}
 }
 
@@ -55,25 +52,12 @@ func (this *SafeMap[Key, Value]) Range(fn func(key Key, val Value) bool) {
 }
 
 func (this *SafeMap[Key, Value]) ContainsKey(key Key) bool {
-	var found bool
-	this.M.Range(func(k, val any) bool {
-		keyObj := k.(Key)
-		if reflect.DeepEqual(keyObj, key) {
-			found = true
-			return false
-		}
-		return true
-	})
-	return found
+	_, ok := this.M.Load(key)
+	return ok
 }
 
 func (this *SafeMap[Key, Value]) Size() int {
-	rowCount := 0
-	this.M.Range(func(key, val any) bool {
-		rowCount++
-		return true
-	})
-	return rowCount
+	return this.M.Length()
 }
 
 func (this *SafeMap[Key, Value]) IsEmpty() bool {
