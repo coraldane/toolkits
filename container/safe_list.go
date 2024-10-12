@@ -30,14 +30,6 @@ func (this *SafeList[T]) PushBack(v T) *list.Element {
 	return e
 }
 
-func (this *SafeList[T]) PushFrontBatch(vs []T) {
-	this.Lock()
-	for _, item := range vs {
-		this.L.PushFront(item)
-	}
-	this.Unlock()
-}
-
 func (this *SafeList[T]) PopBack() T {
 	this.Lock()
 
@@ -51,29 +43,6 @@ func (this *SafeList[T]) PopBack() T {
 
 	var res T
 	return res
-}
-
-func (this *SafeList[T]) PopBackBy(max int) (int, []T) {
-	this.Lock()
-
-	count := this.len()
-	if count == 0 {
-		this.Unlock()
-		return 0, []T{}
-	}
-
-	if count > max {
-		count = max
-	}
-
-	items := make([]T, 0, count)
-	for i := 0; i < count; i++ {
-		item := this.L.Remove(this.L.Back())
-		items = append(items, item.(T))
-	}
-
-	this.Unlock()
-	return count, items
 }
 
 func (this *SafeList[T]) PopBackAll() []T {
@@ -123,7 +92,7 @@ func (this *SafeList[T]) FrontAll() []T {
 	return items
 }
 
-func (this *SafeList[T]) FrontBy(max int) (int, []T) {
+func (this *SafeList[T]) FrontBy(max int, popItem bool) (int, []T) {
 	this.Lock()
 
 	count := this.len()
@@ -141,6 +110,9 @@ func (this *SafeList[T]) FrontBy(max int) (int, []T) {
 	for e := this.L.Front(); e != nil; e = e.Next() {
 		items = append(items, e.Value.(T))
 		index++
+		if popItem {
+			this.L.Remove(e)
+		}
 		if index >= count {
 			break
 		}
@@ -150,7 +122,7 @@ func (this *SafeList[T]) FrontBy(max int) (int, []T) {
 	return count, items
 }
 
-func (this *SafeList[T]) BackBy(max int) (int, []T) {
+func (this *SafeList[T]) BackBy(max int, popItem bool) (int, []T) {
 	this.Lock()
 
 	count := this.len()
@@ -167,10 +139,18 @@ func (this *SafeList[T]) BackBy(max int) (int, []T) {
 	index := 0
 	for e := this.L.Back(); e != nil; e = e.Prev() {
 		items = append(items, e.Value.(T))
+		if popItem {
+			this.L.Remove(e)
+		}
 		index++
 		if index >= count {
 			break
 		}
+	}
+
+	// reverse items at last
+	for i, j := 0, len(items)-1; i < j; i, j = i+1, j-1 {
+		items[i], items[j] = items[j], items[i]
 	}
 
 	this.Unlock()
