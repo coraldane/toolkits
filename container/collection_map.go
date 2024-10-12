@@ -1,16 +1,16 @@
 package container
 
 import (
-	"sync"
+	"github.com/coraldane/toolkits/concurrent"
 )
 
 type CollectionMap[Key comparable, Value any] struct {
-	DataMap sync.Map
+	DataMap concurrent.Map
 }
 
 func NewCollectionMap[K comparable, V any]() *CollectionMap[K, V] {
 	return &CollectionMap[K, V]{
-		DataMap: sync.Map{},
+		DataMap: concurrent.Map{},
 	}
 }
 
@@ -27,7 +27,7 @@ func (this *CollectionMap[Key, Value]) Put(key Key, val Value) {
 	} else {
 		list = obj.(*SafeList[Value])
 	}
-	list.PushFront(val)
+	list.PushBack(val)
 	this.DataMap.Store(key, list)
 }
 
@@ -41,7 +41,7 @@ func (this *CollectionMap[Key, Value]) PutValues(key Key, values ...Value) {
 	}
 
 	for _, val := range values {
-		list.PushFront(val)
+		list.PushBack(val)
 	}
 	this.DataMap.Store(key, list)
 }
@@ -54,7 +54,29 @@ func (this *CollectionMap[Key, Value]) Get(key Key) []Value {
 	}
 
 	list := obj.(*SafeList[Value])
-	return list.BackAll()
+	return list.FrontAll()
+}
+
+func (this *CollectionMap[Key, Value]) GetFrontBy(key Key, max int) (int, []Value) {
+	result := make([]Value, 0)
+	obj, ok := this.DataMap.Load(key)
+	if !ok {
+		return 0, result
+	}
+
+	list := obj.(*SafeList[Value])
+	return list.FrontBy(max, false)
+}
+
+func (this *CollectionMap[Key, Value]) PopFrontBy(key Key, max int) (int, []Value) {
+	result := make([]Value, 0)
+	obj, ok := this.DataMap.Load(key)
+	if !ok {
+		return 0, result
+	}
+
+	list := obj.(*SafeList[Value])
+	return list.FrontBy(max, true)
 }
 
 func (this *CollectionMap[Key, Value]) GetBackBy(key Key, max int) (int, []Value) {
@@ -65,16 +87,22 @@ func (this *CollectionMap[Key, Value]) GetBackBy(key Key, max int) (int, []Value
 	}
 
 	list := obj.(*SafeList[Value])
-	return list.FrontBy(max)
+	return list.BackBy(max, false)
 }
 
-func (this *CollectionMap[Key, Value]) Len() int {
-	rowCount := 0
-	this.DataMap.Range(func(key, val any) bool {
-		rowCount++
-		return true
-	})
-	return rowCount
+func (this *CollectionMap[Key, Value]) PopBackBy(key Key, max int) (int, []Value) {
+	result := make([]Value, 0)
+	obj, ok := this.DataMap.Load(key)
+	if !ok {
+		return 0, result
+	}
+
+	list := obj.(*SafeList[Value])
+	return list.BackBy(max, true)
+}
+
+func (this *CollectionMap[Key, Value]) Size() int {
+	return this.DataMap.Length()
 }
 
 func (this *CollectionMap[Key, Value]) Range(fn func(key Key, val []Value)) {
