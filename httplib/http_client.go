@@ -39,11 +39,11 @@ var defaultTransport = &http.Transport{
 }
 var defaultClient = &http.Client{Transport: defaultTransport}
 
-func GetWithRetryAndDecode(strUrl string, charset string, retryTimes int) (strResponse string, err error) {
+func DoGetWithRetry(strUrl string, params url.Values, headers map[string]string, charset string, retryTimes int) (strResponse string, err error) {
 	var (
 		body []byte
 	)
-	body, err = GetWithRetry(strUrl, retryTimes)
+	body, err = GetWithRetry(strUrl, params, headers, retryTimes)
 	if nil != err {
 		return
 	}
@@ -52,29 +52,35 @@ func GetWithRetryAndDecode(strUrl string, charset string, retryTimes int) (strRe
 	return
 }
 
-func GetWithRetry(strUrl string, retryTimes int) (body []byte, err error) {
+func GetWithRetry(strUrl string, params url.Values, headers map[string]string, retryTimes int) (body []byte, err error) {
 	if 0 > retryTimes {
 		err = errors.New("exceed max retry times")
 		return
 	}
 
-	body, err = Get(strUrl)
+	body, err = Get(strUrl, params, headers)
 	if nil != err {
 		goto ERR
 	}
 
 ERR:
-	GetWithRetry(strUrl, retryTimes-1)
+	GetWithRetry(strUrl, params, headers, retryTimes-1)
 	return
 }
 
-func Get(strUrl string) (body []byte, err error) {
+func Get(strUrl string, params url.Values, headers map[string]string) (body []byte, err error) {
 	var (
 		response *http.Response
 	)
-	req, _ := http.NewRequest("GET", strUrl, nil)
+	urlWithParams := strUrl + "?" + params.Encode()
+	req, _ := http.NewRequest("GET", urlWithParams, nil)
 	req.Header.Set("Connection", "close")
 	req.Header.Set("User-Agent", DEFAULT_USER_AGENT)
+	if nil != headers {
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+	}
 	response, err = defaultClient.Do(req)
 	if nil != err {
 		return
